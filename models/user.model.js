@@ -9,18 +9,18 @@ const userSchema = new Schema({
         required: true,
     },
     email: {
-        type : String , 
-        unique : true, 
-        required : true, 
-        dropDups: true ,
-        lowercase: true, 
+        type: String,
+        unique: true,
+        required: true,
+        dropDups: true,
+        lowercase: true,
         trim: true
     },
     phone: {
-        type : String , 
-        unique : true, 
-        required : true, 
-        dropDups: true ,
+        type: String,
+        unique: true,
+        required: true,
+        dropDups: true,
     },
     password: {
         type: String,
@@ -31,6 +31,43 @@ const userSchema = new Schema({
         type: String,
         require: true,
     },
+    entities: [
+        {
+            id: {
+                type: Schema.Types.ObjectId
+            },
+            name: String,
+            location: String,
+            balance: {
+                type: Number,
+                default: 0.0
+            },
+            revenue: [
+                {
+                    source: String,
+                    amount: Number,
+                    date: Date.now(),
+                    comment: String,
+                }
+            ],
+            expense: [
+                {
+                    source: String,
+                    amount: Number,
+                    date: Date.now(),
+                    comment: String,
+                }
+            ],
+            payroll: [
+                {
+                    name: String,
+                    phone: String,
+                    amount: Number,
+                }
+            ]
+
+        }
+    ],
     acc: {
         balance: {
             type: Number,
@@ -50,8 +87,8 @@ const userSchema = new Schema({
                         },
                         name: String,
                         date: { type: Date, default: Date.now },
-                        comment:{
-                            type:String,
+                        comment: {
+                            type: String,
                         }
 
                     }
