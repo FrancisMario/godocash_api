@@ -2,7 +2,8 @@ var express = require('express');
 var router = express.Router();
 const { User } = require("./../models/user.model")
 const { verifyToken, decodeToken } = require("./../helpers/sessionHelper");
-const { getUserBalance,  performTransaction } = require("./../helpers/transactionHelper")
+const { getUserBalance,  performTransaction } = require("./../helpers/transactionHelper");
+const { addEntityTransaction, createEntity, getEntities, getEntityBalance, addPayrollElement } = require("./../helpers/actionHelper");
 const bcrypt = require("bcrypt");
 /***
  * Returns user account details 
@@ -30,8 +31,6 @@ router.get('/me', async function (req, res, next) {
     });
   });
 });
-
-
 
 router.get('/history', async function (req, res, next) {
 
@@ -94,8 +93,49 @@ router.post('/send', function (req, res, next) {
     });
     return;
   });
+});
+
+router.post('/entity', async function (req, res, next) {
+
+  const user = await decodeToken(req.header("x-auth-token"));
+
+  console.log(user);
+
+  const { name, location, starting_amount } = req.body;
+
+  createEntity(user._id, name, location, starting_amount).then((doc) => {
+    res.send({
+      status: "success",
+      data: doc
+    });
+  }).catch((err) => {
+    res.status(500).send({
+      status: "error",
+      error: err
+    });
+  });
+});
 
 
+router.get('/entity', async function (req, res, next) {
+
+  const user = await decodeToken(req.header("x-auth-token"));
+
+  console.log(user);
+
+  const { name, location, starting_amount } = req.body;
+
+  getEntities(user._id).then((doc) => {
+    res.send({
+      status: "success",
+      data: doc
+    });
+  }).catch((err) => {
+    res.status(500).send({
+      status: "error",
+      error: err
+    });
+  });
 });
 
 module.exports = router;

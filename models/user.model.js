@@ -21,6 +21,7 @@ const userSchema = new Schema({
         unique: true,
         required: true,
         dropDups: true,
+        trim:true
     },
     password: {
         type: String,
@@ -44,9 +45,12 @@ const userSchema = new Schema({
             },
             revenue: [
                 {
-                    source: String,
+                    source: {type: String},
                     amount: Number,
-                    date: Date.now(),
+                    date: {
+                        type:Date,
+                        default:Date.now()
+                    },
                     comment: String,
                 }
             ],
@@ -54,15 +58,21 @@ const userSchema = new Schema({
                 {
                     source: String,
                     amount: Number,
-                    date: Date.now(),
-                    comment: String,
+                    date: {
+                        type:Date,
+                        default:Date.now()
+                    },
+                    comment: String
                 }
             ],
             payroll: [
                 {
+                    id: {
+                        type: Schema.Types.ObjectId
+                    },
                     name: String,
                     phone: String,
-                    amount: Number,
+                    amount: Number
                 }
             ]
 
