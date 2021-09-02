@@ -101,9 +101,9 @@ router.post('/entity', async function (req, res, next) {
 
   console.log(user);
 
-  const { name, location, starting_amount } = req.body;
+  const { name, location, starting_amount, description } = req.body;
 
-  createEntity(user._id, name, location, starting_amount).then((doc) => {
+  createEntity(user._id, name, location, starting_amount, description).then((doc) => {
     res.send({
       status: "success",
       data: doc

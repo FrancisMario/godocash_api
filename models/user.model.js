@@ -39,6 +39,7 @@ const userSchema = new Schema({
             },
             name: String,
             location: String,
+            description: String,
             balance: {
                 type: Number,
                 default: 0.0

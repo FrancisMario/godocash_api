@@ -5,11 +5,12 @@ const getEntities = (userid) => {
     return new Promise((res, rej) => {
         User.findOne({ $or: [{ _id: userid }, { phone: userid }, { email: userid }] }).then((doc) => {
             console.log(doc);
-            res(doc.entities);
+            res(doc);
         }).catch((err) => {
+            console.log(err);
             rej(err);
         });
-
+ 
     });
 }
 
@@ -25,11 +26,12 @@ const getEntityBalance = ({ userid, entity }) => {
 
 
 
-const createEntity = (userid, name, location, starting_amount = 0) => {
+const createEntity = (userid, name, location, starting_amount = 0, description) => {
     return new Promise(async (res, rej) => {
         let entity = {
             name: name,
             location: location,
+            description: description
         }
         User.findOneAndUpdate(userid, { $push: { "entities": entity } }, { useFindAndModify: true }).then((doc) => {
 
@@ -76,6 +78,9 @@ const addEntityTransaction = (userid, id, type, amount, source, comment) => {
         }
         var config = {};
         switch (type) {
+
+
+            
             case 0:
                 config = { $push: { "expense": transaction }, $inc: { 'balance': (0 - amount) } };
                 console.log("flow is expense")
