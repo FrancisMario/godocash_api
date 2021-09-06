@@ -37,6 +37,7 @@ const userSchema = new Schema({
             id: {
                 type: Schema.Types.ObjectId
             },
+            index:Number,
             name: String,
             location: String,
             description: String,
@@ -72,6 +73,7 @@ const userSchema = new Schema({
                         type: Schema.Types.ObjectId
                     },
                     name: String,
+                    role: String,
                     phone: String,
                     amount: Number
                 }

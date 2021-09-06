@@ -47,13 +47,14 @@ router.post('/register', async function (req, res, next) {
             req.body.password,
             user.password
         );
+        
         if (!validPassword)
             return res.status(400).send("Invalid email or password");
 
         const token = user.generateAuthToken(); 
         res.send(token);
     } catch (error) {
-        console.log(error);
+        console.log("console log",error);
         res.status(500).send("An error occured");
     }
   });
