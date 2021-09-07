@@ -12,7 +12,7 @@ var authRouter = require('./routes/auth');
 
 // get comfig vars
 dotenv.config();
-
+process.count = 0;
 var app = express();
 
 connection()
@@ -22,7 +22,9 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
 app.use(function (req, res, next) {
-    console.log(process.listenerCount)
+    console.log(process.count);
+    process.count++;
+    next()
 });
 
 app.use(logger('dev'));
@@ -35,7 +37,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api', indexRouter);
 app.use('/auth', authRouter);
 
-// catch 404 and forward to error handler
+// catch 404 and forward to error handler 
 app.use(function (req, res, next) {
   next(createError(404));
 });

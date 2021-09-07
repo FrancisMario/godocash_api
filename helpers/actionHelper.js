@@ -104,7 +104,6 @@ const getMonthData = (id, field) => {
             }
         ])
             .then(data => {
-                console.error("data => ",data);
                 res(data);
             }).catch(err => {
                 rej(err);
