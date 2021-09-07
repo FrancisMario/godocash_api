@@ -21,7 +21,7 @@ const userSchema = new Schema({
         unique: true,
         required: true,
         dropDups: true,
-        trim:true
+        trim: true
     },
     password: {
         type: String,
@@ -32,55 +32,57 @@ const userSchema = new Schema({
         type: String,
         require: true,
     },
-    entities: [
-        {
-            id: {
-                type: Schema.Types.ObjectId
-            },
-            index:Number,
-            name: String,
-            location: String,
-            description: String,
-            balance: {
-                type: Number,
-                default: 0.0
-            },
-            revenue: [
-                {
-                    source: {type: String},
-                    amount: Number,
-                    date: {
-                        type:Date,
-                        default:Date.now()
-                    },
-                    comment: String,
-                }
-            ],
-            expense: [
-                {
-                    source: String,
-                    amount: Number,
-                    date: {
-                        type:Date,
-                        default:Date.now()
-                    },
-                    comment: String
-                }
-            ],
-            payroll: [
-                {
-                    id: {
-                        type: Schema.Types.ObjectId
-                    },
-                    name: String,
-                    role: String,
-                    phone: String,
-                    amount: Number
-                }
-            ]
+    entity:
+    {
+        name: {
+            type: String,
+            required: true,
+        },
+        location: {
+            type: String,
+            required: true,
+        },
+        balance: {
+            type: Number,
+            default: 0.0
+        },
+        revenue: [
+            {
+                source: { type: String },
+                amount: Number,
+                date: {
+                    type: Date,
+                    default: Date.now()
+                },
+                comment: String,
+            }
+        ],
+        expense: [
+            {
+                source: String,
+                amount: Number,
+                date: {
+                    type: Date,
+                    default: Date.now()
+                },
+                comment: String
+            }
+        ],
+        reports: {},
+        
+        payroll: [
+            {
+                id: {
+                    type: Schema.Types.ObjectId
+                },
+                name: String,
+                role: String,
+                phone: String,
+                amount: Number
+            }
+        ]
 
-        }
-    ],
+    },
     acc: {
         balance: {
             type: Number,
@@ -116,7 +118,7 @@ const userSchema = new Schema({
  */
 
 userSchema.methods.generateAuthToken = function () {
-    const token = jwt.sign({ _id: this._id, name: this.name, avatar: this.avatar, email: this.email, phone: this.phone }, process.env.TOKEN_SECRET);
+    const token = jwt.sign(JSON.stringify({ _id: this._id, name: this.name, avatar: this.avatar, email: this.email, phone: this.phone }), process.env.TOKEN_SECRET);
     return token;
 };
 

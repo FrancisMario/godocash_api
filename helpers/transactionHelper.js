@@ -4,7 +4,7 @@ const { User } = require("../models/user.model");
  const getUserBalance = (userid) => {
     return new Promise((res, rej) => {
         User.findOne({$or : [ { _id: userid }, { phone:userid }, { email:userid } ]}).then((doc) => {
-            console.log(doc);
+            
             res(doc.acc.balance);
         }).catch((err) => {
             rej(err);
@@ -17,7 +17,7 @@ const { User } = require("../models/user.model");
     return new Promise((rej, res) => {
         User.find({$or : [ { _id: userid }, { phone:userid }, { email:userid } ]}, { $inc: { 'acc.balance': amount } }, function (err, doc) {
             if (err) res({ status: "failed", data: err });
-            console.log(docs);
+            
             res(docs);
         });
     });
@@ -34,7 +34,6 @@ const { User } = require("../models/user.model");
         
         // this enables users to use any either account id, email or phone to perform transactions
         const prepQuery = (id) => {
-            console.log("parameter is: ", id);
             let query = {};
             /// adding check to see if the user id is an object id or not:
             if (id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -44,7 +43,6 @@ const { User } = require("../models/user.model");
                 //  its an email or phone
                 query = {$or : [  { phone:id }, { email:id } ]};
             }    
-            console.log(id ," => ", query);
             return query;
         }
 
@@ -89,7 +87,7 @@ const { User } = require("../models/user.model");
         User.findOneAndUpdate( userid , { $push: { 'acc.history': history } }, {useFindAndModify:true}).then((docs) => {
             res(docs);
         }).catch(err => {
-            console.log("error@@@@")
+            console.log("error")
             rej(false)
         })
     });

@@ -3,7 +3,7 @@ var router = express.Router();
 const { User } = require("./../models/user.model")
 const { verifyToken, decodeToken } = require("./../helpers/sessionHelper");
 const { getUserBalance,  performTransaction } = require("./../helpers/transactionHelper");
-const { addEntityTransaction, updateRevenue, createEntity, getEntities, getEntityBalance, addPayrollElement, updateExpense } = require("./../helpers/actionHelper");
+const { addEntityTransaction, updateRevenue, createEntity, getEntities, getCurrentReport, addPayrollElement, updateExpense } = require("./../helpers/actionHelper");
 const bcrypt = require("bcrypt");
 /***
  * Returns user account details 
@@ -17,7 +17,6 @@ router.get('/me', async function (req, res, next) {
 
   const user = await decodeToken(req.header("x-auth-token"));
 
-  console.log(user);
 
   User.findById(user._id).select("-password").then((doc) => {
     res.send({
@@ -36,7 +35,6 @@ router.get('/history', async function (req, res, next) {
 
   const user = await decodeToken(req.header("x-auth-token"));
 
-  console.log(user);
   User.findById(user._id).select("-password").then((doc) => {
     res.send({
       status: "success",
@@ -55,9 +53,6 @@ router.post('/send', function (req, res, next) {
 
   const { recipient, amount, comment } = req.body;
 
-  console.log("recipient: ",recipient);
-  console.log("amount: ",amount);
-  console.log("comment: ",comment);
 
   // get usr id from token, ie decode the token.
   const user = decodeToken(req.header("x-auth-token"));
@@ -98,8 +93,6 @@ router.post('/send', function (req, res, next) {
 router.post('/entity', async function (req, res, next) {
   const user = await decodeToken(req.header("x-auth-token"));
 
-  console.log(user);
-
   const { name, location, starting_amount, description } = req.body;
 
   createEntity(user._id, name, location, starting_amount, description).then((doc) => {
@@ -116,24 +109,39 @@ router.post('/entity', async function (req, res, next) {
 });
 
 
-router.get('/entity', async function (req, res, next) {
+
+router.get('/report', async function (req, res, next) {
 
   const user = await decodeToken(req.header("x-auth-token"));
 
-  console.log(user);
 
   const { name, location, starting_amount } = req.body;
 
-  console.log(user._id);
+  getCurrentReport(user._id).then((doc) => {
+    res.send({
+      status: "success",
+      data: doc
+    });
+  }).catch((err) => {
+    res.status(404).send({
+      status: "error",
+      error: err
+    });
+  });
+});
+
+router.get('/entity', async function (req, res, next) {
+
+  const user = await decodeToken(req.header("x-auth-token"));
   getEntities(user._id).then((doc) => {
     res.send({
       status: "success",
       data: doc
     });
   }).catch((err) => {
-    res.status(500).send({
+    res.status(404).send({
       status: "error",
-      error: err
+      error: "Document not found"
     });
   });
 });
@@ -141,12 +149,7 @@ router.get('/entity', async function (req, res, next) {
 router.post('/entity/revenue/', async function (req, res, next) {
 
   const user = await decodeToken(req.header("x-auth-token"));
-
-  console.log(user);
-
   const { name, location, starting_amount } = req.body;
-
-  console.log(user._id);
   updateRevenue(req.body.source, req.body.amount, req.body.comment, user._id, req.body.index).then((doc) => {
     res.send({
       status: "success",
@@ -163,12 +166,7 @@ router.post('/entity/revenue/', async function (req, res, next) {
 router.post('/entity/expense/', async function (req, res, next) {
 
   const user = await decodeToken(req.header("x-auth-token"));
-
-  // console.log(user);
-
   const { name, location, starting_amount } = req.body;
-
-  console.log(user._id);
   updateExpense(req.body.source, req.body.amount, req.body.comment, user._id, req.body.index).then((doc) => {
     res.send({
       status: "success",
@@ -182,22 +180,20 @@ router.post('/entity/expense/', async function (req, res, next) {
   });
 });
 
+
 router.post('/entity/payroll/', async function (req, res, next) {
 
   const user = await decodeToken(req.header("x-auth-token"));
 
-  console.log(user);
 
   const { name, phone, amount, index, role } = req.body;
 
-  console.log(user._id);
   addPayrollElement( user._id, name, phone, amount, role, index ).then((doc) => {
     res.send({
       status: "success",
       data: doc
     });
   }).catch((err) => {
-    console.log(err);
     res.status(500).send({
       status: "error",
       error: err

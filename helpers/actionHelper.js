@@ -1,17 +1,15 @@
-const { version } = require("mongoose");
 const { User } = require("../models/user.model");
+const mongoose = require("mongoose");
 
 const getEntities = (userid) => {
     return new Promise((res, rej) => {
         User.findOne({ $or: [{ _id: userid }, { phone: userid }, { email: userid }] }).then((doc) => {
-            console.log(doc);
-            if (doc.length > 0) {
-                res(doc.entities);
+            if (doc) {
+                res(doc.entity);
                 return;
             }
-            res(doc.entities);
+            throw err;
         }).catch((err) => {
-            console.log(err);
             rej(err);
         });
 
@@ -21,7 +19,6 @@ const getEntityBalance = ({ userid, entity }) => {
     return new Promise((rej, res) => {
         User.find({ $or: [{ _id: userid }, { phone: userid }, { email: userid }] }, { $inc: { 'acc.balance': amount } }, function (err, doc) {
             if (err) res({ status: "failed", data: err });
-            console.log(docs);
             res(docs.entity);
         });
     });
@@ -29,73 +26,101 @@ const getEntityBalance = ({ userid, entity }) => {
 
 
 
-const createEntity = (userid, name, location, starting_amount = 0, description) => {
-    return new Promise(async (res, rej) => {
-        
-        var index = await getEntityIndex(userid);
+const prepDate = () => {
+    return new Promise((res, rej) => {
+        // 2021-09-07T05:55:01.516Z
+        var year = new Date().getUTCFullYear();
+        var month = new Date().getUTCMonth();
 
-        // if (index < 0) {
-        //     // index generator failed
-        //     rej(false);
-        // }
-
-        let entity = {
-            name: name,
-            location: location,
-            index : index,
-            description: description
-        }
-        
-        User.findOneAndUpdate(userid, { $push: { "entities": entity } }, { useFindAndModify: true }).then((doc) => {
-
-            // if a starting balance was specified
-            // code is broken... will fix in later times..
-            if (false) {
-                var len = 0;
-                if (doc.entities.length < 1) {
-                    console.log(doc.entities)
-                } else {
-                    len = doc.entities[doc.entities.length - 1].id;
-                }
-                console.log("docs length => ", doc.entities.length)
-                console.log("entity => ", doc.entities[doc.entities.length - 1])
-                addEntityTransaction(userid, len, 1, starting_amount, "capital", "starting balance");
-            }
-            res(doc);
-        }).catch(err => {
-            console.log("error", err)
-            rej(false)
-        })
+        // 
+        var sdate = `${year}-${month + 1}-01`;
+        var edate = `${year}-${month + 2}-01`;
+        var finalDate = {
+            "s": sdate,
+            "e": edate
+        };
+        res(finalDate);
     });
 }
 
+// gets the  current report
 
-// gets the  index of the new entity
-const getEntityIndex = (id) => {
-    console.log("id: ", id)
-    return new Promise((res, rej) => {
-        User.findOne({"_id" : id},).then((doc) => {
-            console.log(doc);
-            var len = doc.entities.length;
-            res(len);
-        }).catch((err) => {
-            console.log(err);
-            rej(-1);
-        });
+const getCurrentReport = (id,) => {
+    return new Promise(async (res, rej) => {
+        var revenue = await getMonthData(id, "revenue");
+        var expense = await getMonthData(id, "expense");
+
+        var totalRevenue = 0;
+        var totalExpense = 0;
+
+        // calculating the revenue
+        revenue[0].entity.forEach((element) => {
+            totalRevenue += element.amount;
+        })
+
+        // calculating the expense
+        expense[0].entity.forEach((element) => {
+            totalExpense += element.amount;
+        })
+
+        res({
+            revenue:totalRevenue,
+            expense:totalExpense,
+            expenseHistory: expense[0].entity,
+            revenueHistory: revenue[0].entity
+        })
     })
 }
 
-const updateRevenue =  (source, amount, comment, id, index = 0) =>  {
+
+const getMonthData = (id, field) => {
+    return new Promise(async (res, rej) => {
+        var date = await prepDate();
+        var firstDate = new Date(date.s);
+        var other = new Date(date.e);
+        User.aggregate([
+            {
+                "$match": {
+                    "_id": mongoose.Types.ObjectId(id),
+                    [`entity.${field}`]:
+                        { "$elemMatch": { "date": { "$gte": firstDate, "$lt": other } } }
+                }
+            },
+            {
+                "$project": {
+                    "entity": {
+                        "$filter": {
+                            "input": "$entity."+field,
+                            "as": "elem",
+                            "cond": {
+                                "$and": [
+                                    { "$gte": ["$$elem.date", firstDate] },
+                                    { "$lt": ["$$elem.date", other] }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        ])
+            .then(data => {
+                console.error("data => ",data);
+                res(data);
+            }).catch(err => {
+                rej(err);
+            })
+
+    })
+}
+
+
+const updateRevenue = (source, amount, comment, id) => {
     return new Promise(async (res, rej) => {
         // verify input
-        console.log(source);
-        console.log(amount);
-        console.log(comment);
-        console.log(id);
-        var revenue = [`entities.${index}.balance`];
+        var revenue = [`entity.balance`];
         User.updateOne(
             { '_id': id },
-            { $push: { [`entities.${index}.revenue`]: { source: source, amount: amount, comment: comment } }, $inc: { [`entities.${0}.balance`]: amount } },
+            { $push: { [`entity.revenue`]: { source: source, amount: amount, comment: comment } }, $inc: { [`entity.balance`]: amount } },
             (err, result) => {
                 if (err) {
                     rej({ error: 'Unable to update revenue.', });
@@ -107,16 +132,11 @@ const updateRevenue =  (source, amount, comment, id, index = 0) =>  {
     })
 }
 
-const updateExpense = (source, amount, comment, id, index = 0) => {
+const updateExpense = (source, amount, comment, id) => {
     return new Promise((res, rej) => {
-        // verify input
-        console.log(source);
-        console.log(amount);
-        console.log(comment);
-        console.log(id);
         User.updateOne(
             { '_id': id },
-            { $push: { [`entities.${index}.expense`]: { source: source, amount: amount, comment: comment } }, $inc: { [`entities.${0}.balance`]: -amount } },
+            { $push: { [`entity.expense`]: { source: source, amount: amount, comment: comment } }, $inc: { [`entity.balance`]: -amount } },
             (err, result) => {
                 if (err) {
                     rej({ error: 'Unable to update expense.', });
@@ -129,54 +149,15 @@ const updateExpense = (source, amount, comment, id, index = 0) => {
 }
 
 
-/**
- * 
- * @param {*} userid 
- * @param {*} id 
- * @param {*} type 
- * @param {*} amount 
- * @param {*} source 
- * @param {*} comment 
- * @returns 
- */
-
-// adding transaction history and updating balance
-const addEntityTransaction = (userid, id, type, amount, source, comment) => {
-    return new Promise((res, rej) => {
-        let transaction = {
-            amount: amount,
-            source: source,
-            comment: comment
-        }
-        var config = {};
-        switch (type) {
-            case 0:
-                config = { $push: { "expense": transaction }, $inc: { 'balance': (0 - amount) } };
-                console.log("flow is expense")
-                break;
-            default:
-                console.log("flow is revenue")
-                config = { $push: { "revenue": transaction }, $inc: { 'balance': amount } };
-                break;
-        }
-        // console.log("quesry", query);
-        User.findOneAndUpdate({ _id: userid, "entities.id": id }, { "entities.$": config }, { useFindAndModify: true, }).then((docs) => {
-            res(docs);
-        }).catch(err => {
-            console.log("errors", err)
-            rej(false)
-        })
-    });
-}
 
 
 // adding adds new element to the payroll
-const addPayrollElement = (id, name, phone, amount, role, index = 0) => {
+const addPayrollElement = (id, name, phone, amount, role) => {
     return new Promise((res, rej) => {
         // verify input
         User.updateOne(
             { '_id': id },
-            { $push: { [`entities.${index}.payroll`]: { name: name, phone: phone, amount: amount, role: role } } },
+            { $push: { [`entity.payroll`]: { name: name, phone: phone, amount: amount, role: role } } },
             (err, result) => {
                 if (err) {
                     rej({ error: 'Unable to update payroll.', });
@@ -188,4 +169,4 @@ const addPayrollElement = (id, name, phone, amount, role, index = 0) => {
     })
 }
 
-module.exports = { addEntityTransaction, createEntity, getEntities, getEntityBalance, addPayrollElement, updateRevenue, updateExpense };
+module.exports = { getEntities, getEntityBalance, addPayrollElement, updateRevenue, updateExpense, getCurrentReport };
