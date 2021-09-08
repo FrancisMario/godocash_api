@@ -52,28 +52,42 @@ const getCurrentReport = (id,) => {
 
         var totalRevenue = 0;
         var totalExpense = 0;
+        var expenseHistory = [];
+        var revenueHistory = [];
 
         // calculating the revenue
-        revenue[0].entity.forEach((element) => {
-            totalRevenue += element.amount;
-        })
+        console.log("revenue.length", revenue.length)
+        if(revenue.length > 0){
+            revenue[0].entity.forEach((element) => {
+                totalRevenue += element.amount;
+            })
+            revenueHistory = revenue[0].entity;
+        }
 
         // calculating the expense
-        expense[0].entity.forEach((element) => {
-            totalExpense += element.amount;
-        })
+        console.log("expense.length", expense.length)
+        if(expense.length > 0){
+            expense[0].entity.forEach((element) => {
+                totalExpense += element.amount;
+            })
+            expenseHistory = expense[0].entity;
+        }
 
         res({
             revenue:totalRevenue,
             expense:totalExpense,
-            expenseHistory: expense[0].entity,
-            revenueHistory: revenue[0].entity
+            expenseHistory: expenseHistory,
+            revenueHistory: revenueHistory,
         })
+        // res({
+        //     expense:expense,
+        //     revenue:revenue
+        // })
     })
 }
 
 
-const getMonthData = (id, field) => {
+const getMonthData = (id, field) => {3247034
     return new Promise(async (res, rej) => {
         var date = await prepDate();
         var firstDate = new Date(date.s);
