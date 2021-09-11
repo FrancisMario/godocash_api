@@ -127,13 +127,13 @@ const getMonthData = (id, field) => {3247034
 }
 
 
-const updateRevenue = (source, amount, comment, id) => {
+const updateRevenue = (source, amount, date, id) => {
     return new Promise(async (res, rej) => {
         // verify input
         var revenue = [`entity.balance`];
         User.updateOne(
             { '_id': id },
-            { $push: { [`entity.revenue`]: { source: source, amount: amount, comment: comment } }, $inc: { [`entity.balance`]: amount } },
+            { $push: { [`entity.revenue`]: { source: source, amount: amount, date: date } }, $inc: { [`entity.balance`]: amount } },
             (err, result) => {
                 if (err) {
                     rej({ error: 'Unable to update revenue.', });
@@ -145,11 +145,11 @@ const updateRevenue = (source, amount, comment, id) => {
     })
 }
 
-const updateExpense = (source, amount, comment, id) => {
+const updateExpense = (source, amount, date, id) => {
     return new Promise((res, rej) => {
         User.updateOne(
             { '_id': id },
-            { $push: { [`entity.expense`]: { source: source, amount: amount, comment: comment } }, $inc: { [`entity.balance`]: -amount } },
+            { $push: { [`entity.expense`]: { source: source, amount: amount, date: date } }, $inc: { [`entity.balance`]: -amount } },
             (err, result) => {
                 if (err) {
                     rej({ error: 'Unable to update expense.', });
