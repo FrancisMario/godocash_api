@@ -83,6 +83,39 @@ const userSchema = new Schema({
         ]
 
     },
+    shop: {
+        inventory: [ // inventory list - 
+            {
+                id: { type: Schema.Types.ObjectId }, // Item id
+                name: [{ type: String, required: true, trim: true }], // Item name - ["Brand","Model","submodel","Year"]  
+                images: [{ type: String,}], // Item name - ["Brand","Model","submodel","Year"]  
+                description: { type: String, },
+                price: { type: Number, required: true, }, // Item price
+                // specific for shoes 
+                // colors: [{ name: { type: String }, hex: { type: String, trim: true } }],
+                // Europe standard shoe size, use functions to  convert to other standard.
+                units: [
+                    {
+                        color: { name: String, hex: String },
+                        size: { type: Number, default: 0 }
+                    }
+                ],
+            }
+        ],
+        sales: [
+            {
+                id: { type: Schema.Types.ObjectId }, // order id
+                date: { type: Date, default: Date.now }, // order date
+                cart_id: { type: String, required: true },
+                shipping: {
+                    type: { type: Number, required: true }, // wether it is regular or express shipping ie, 0 or 1 respectively
+                    fee: { type: Number, required: true, }
+                }, // Shipping fee
+                total: { type: Number, required: true, }, // Item price
+                status: { type: Number, required: true, }, // proccessing, shipped, delivered, returned.
+            }
+        ],
+    },
     acc: {
         balance: {
             type: Number,
